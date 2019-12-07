@@ -15,54 +15,37 @@ class Panorama():
 		self.pano = pano.strip()
 
 	def get_name(self, heading, pitch):
-		return self.name_pattern % (self.pano, heading, pitch)
+		heading = heading % 360
+		heading_s = '%d' % heading
+		while len(heading_s)<3:
+			heading_s = '0'+heading_s
+		return self.name_pattern % (self.pano, heading_s, pitch)
 
 	def get_image(self, name):
 		return cv2.imread(join(self.katalog_in, name))
 
-	def read_images(self, width=400):
-		self.img_0 = self.get_image(self.get_name('280', '0'))
-		self.img_1 = self.get_image(self.get_name('300', '0'))
-		self.img_2 = self.get_image(self.get_name('300', '-10'))
-		self.img_3 = self.get_image(self.get_name('280', '-10'))
-		self.img_4 = self.get_image(self.get_name('260', '-10'))
-		self.img_5 = self.get_image(self.get_name('260', '0'))
-		self.img_6 = self.get_image(self.get_name('260', '10'))
-		self.img_7 = self.get_image(self.get_name('280', '10'))
-		self.img_8 = self.get_image(self.get_name('300', '10'))
-		self.img_0 = imutils.resize(self.img_0, width=width)
-		self.img_1 = imutils.resize(self.img_1, width=width)
-		self.img_2 = imutils.resize(self.img_2, width=width)
-		self.img_3 = imutils.resize(self.img_3, width=width)
-		self.img_4 = imutils.resize(self.img_4, width=width)
-		self.img_5 = imutils.resize(self.img_5, width=width)
-		self.img_6 = imutils.resize(self.img_6, width=width)
-		self.img_7 = imutils.resize(self.img_7, width=width)
-		self.img_8 = imutils.resize(self.img_8, width=width)
+	def read_images(self, width=400, str_X=180):
+		self.images = []
+		img_params = [(str_X, 0), (str_X+20, 0), (str_X+20, -10), (str_X, -10), (str_X-20, -10), (str_X-20, 0), (str_X-20, 10), (str_X, 10), (str_X+20, 10)]
+		for param in img_params:
+			self.images.append(self.get_image(self.get_name(param[0], param[1])))
+		for i in range(len(self.images)):
+			self.images[i] = imutils.resize(self.images[i], width=width)
 
 	def compute_images(self):
-		self.p1 = self.compute_two_images(self.img_0, self.img_1)
-		self.p2 = self.compute_two_images(self.img_0, self.img_2)
-		self.p3 = self.compute_two_images(self.img_0, self.img_3)
-		self.p4 = self.compute_two_images(self.img_0, self.img_4)
-		self.p5 = self.compute_two_images(self.img_0, self.img_5)
-		self.p6 = self.compute_two_images(self.img_0, self.img_6)
-		self.p7 = self.compute_two_images(self.img_0, self.img_7)
-		self.p8 = self.compute_two_images(self.img_0, self.img_8)
+		self.params = []
+		for i in range(0,len(self.images)):
+			self.params.append(self.compute_two_images(self.images[0], self.images[i]))
 
-	def show_pano(self):
-		self.read_images(width=480)
+	def show_pano(self, width=400, str_X=180):
+		self.read_images(width=width, str_X=str_X)
 		self.compute_images()
-		self.result = np.zeros((3*self.img_0.shape[0],3*self.img_0.shape[1],3), dtype='uint8')
-		self.result[self.img_1.shape[0]+self.p1[1]:2*self.img_1.shape[0]+self.p1[1], self.img_1.shape[1]+self.p1[0]:2*self.img_1.shape[1]+self.p1[0]] = self.img_1		
-		self.result[self.img_2.shape[0]+self.p2[1]+0:2*self.img_2.shape[0]+self.p2[1]+0, self.img_2.shape[1]+self.p2[0]:2*self.img_2.shape[1]+self.p2[0]] = self.img_2
-		self.result[self.img_3.shape[0]+self.p3[1]:2*self.img_3.shape[0]+self.p3[1], self.img_3.shape[1]+self.p3[0]:2*self.img_3.shape[1]+self.p3[0]] = self.img_3
-		self.result[self.img_4.shape[0]+self.p4[1]:2*self.img_4.shape[0]+self.p4[1], self.img_4.shape[1]+self.p4[0]-0:2*self.img_4.shape[1]+self.p4[0]-0] = self.img_4
-		self.result[self.img_5.shape[0]+self.p5[1]:2*self.img_5.shape[0]+self.p5[1], self.img_5.shape[1]+self.p5[0]-0:2*self.img_5.shape[1]+self.p5[0]-0] = self.img_5
-		self.result[self.img_6.shape[0]+self.p6[1]:2*self.img_6.shape[0]+self.p6[1], self.img_6.shape[1]+self.p6[0]:2*self.img_6.shape[1]+self.p6[0]] = self.img_6
-		self.result[self.img_7.shape[0]+self.p7[1]:2*self.img_7.shape[0]+self.p7[1], self.img_7.shape[1]+self.p7[0]:2*self.img_7.shape[1]+self.p7[0]] = self.img_7
-		self.result[self.img_8.shape[0]+self.p8[1]:2*self.img_8.shape[0]+self.p8[1], self.img_8.shape[1]+self.p8[0]:2*self.img_8.shape[1]+self.p8[0]] = self.img_8
-		self.result[self.img_0.shape[0]:2*self.img_0.shape[0], self.img_0.shape[1]:2*self.img_0.shape[1]] = self.img_0
+		self.result = np.zeros((3*self.images[0].shape[0],3*self.images[0].shape[1],3), dtype='uint8')
+		#for i in range(1,len(self.params)):
+		for i in (2,4,6,8,1,3,5,7,0):
+			self.result[self.images[i].shape[0]+self.params[i][1]:2*self.images[i].shape[0]+self.params[i][1], self.images[i].shape[1]+self.params[i][0]:2*self.images[i].shape[1]+self.params[i][0]] = self.images[i]
+		#for i in range(1):
+		#	self.result[self.images[i].shape[0]+self.params[i][1]:2*self.images[i].shape[0]+self.params[i][1], self.images[i].shape[1]+self.params[i][0]:2*self.images[i].shape[1]+self.params[i][0]] = self.images[i]
 		cv2.imshow('Panorama', self.result)
 		cv2.waitKey(0)
 
@@ -81,7 +64,6 @@ class Panorama():
 				shift_Y.append(kpsA[match[1]][1]-kpsB[match[0]][1])				
 		przesX = int(sum(shift_X)/len(shift_X))
 		przesY = int(sum(shift_Y)/len(shift_Y))
-		print(przesX, przesY)
 		return (przesX, przesY)
 
 	def detectAndDescribe(self, image):
@@ -122,6 +104,5 @@ class Panorama():
 
 
 if __name__ == '__main__':
-	#panorama = Panorama('9cgfAbCfJTS9o0wLjnKc-g')
-	panorama = Panorama('FbJIp3vFL_bmrovENrJoRg')
-	panorama.show_pano()
+	panorama = Panorama('CAoSLEFGMVFpcE81VElidWJkbUhsQzJHZkpZSml6WEExNkhHRTNLbXR3YkdqRGU5')
+	panorama.show_pano(400,120)
