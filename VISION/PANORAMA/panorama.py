@@ -5,7 +5,7 @@ import numpy as np
 
 class Panorama():
 	def __init__(self, pano, centrum=180):
-		self.katalog_in = '../../OUTPUT/EXAMPLE/'
+		self.katalog_in = 'EXAMPLES/'
 		self.pano = pano.strip()
 		self.centrum = centrum
 		self.name_pattern = 'sv_p%s_s640x480_f40_h%s_p%s.png'
