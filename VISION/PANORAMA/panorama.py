@@ -32,14 +32,14 @@ class Panorama():
 		for i in range(len(self.images)):
 			self.images[i] = imutils.resize(self.images[i], width=width)
 
-	def compute_images(self):
+	def compute_images(self, center):
 		self.params = []
 		for i in range(0,len(self.images)):
-			self.params.append(self.compute_two_images(self.images[0], self.images[i]))
+			self.params.append(self.compute_two_images(self.images[0], self.images[i],i, center))
 
 	def show_pano(self, width=400, str_X=180):
 		self.read_images(width=width, str_X=str_X)
-		self.compute_images()
+		self.compute_images(str_X)
 		self.result = np.zeros((3*self.images[0].shape[0],3*self.images[0].shape[1],3), dtype='uint8')
 		#for i in range(1,len(self.params)):
 		for i in (2,4,6,8,1,3,5,7,0):
@@ -49,7 +49,7 @@ class Panorama():
 		cv2.imshow('Panorama', self.result)
 		cv2.waitKey(0)
 
-	def compute_two_images(self, imageA, imageB, ratio=0.75, reprojTresh=4.0, showMatches=False):
+	def compute_two_images(self, imageA, imageB, iteracja, center, ratio=0.75, reprojTresh=1.0, showMatches=False):
 		(kpsA, featuresA) = self.detectAndDescribe(imageA)
 		(kpsB, featuresB) = self.detectAndDescribe(imageB)
 		M = self.matchKeypoints(kpsA, kpsB, featuresA, featuresB, ratio, reprojTresh)
@@ -64,6 +64,8 @@ class Panorama():
 				shift_Y.append(kpsA[match[1]][1]-kpsB[match[0]][1])				
 		przesX = int(sum(shift_X)/len(shift_X))
 		przesY = int(sum(shift_Y)/len(shift_Y))
+		#for i in range(len(shift_X)):
+		#	print(center, iteracja, shift_X[i], shift_Y[i])
 		return (przesX, przesY)
 
 	def detectAndDescribe(self, image):
@@ -105,4 +107,6 @@ class Panorama():
 
 if __name__ == '__main__':
 	panorama = Panorama('CAoSLEFGMVFpcE81VElidWJkbUhsQzJHZkpZSml6WEExNkhHRTNLbXR3YkdqRGU5')
-	panorama.show_pano(400,120)
+	#panorama = Panorama('9cgfAbCfJTS9o0wLjnKc-g')
+	for i in range(0,360,20):
+		panorama.show_pano(400,i)
